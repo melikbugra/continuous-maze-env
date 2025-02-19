@@ -20,7 +20,7 @@ class Player:
             height=PLAYER_SIZE,
             border=6,
             border_color=(127, 0, 0, 255),
-            color=(255, 0, 0),
+            color=(10, 0, 255),
             batch=batch,
         )
 

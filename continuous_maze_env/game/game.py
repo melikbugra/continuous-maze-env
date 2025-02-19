@@ -15,7 +15,13 @@ from continuous_maze_env.game.utils.functions import (
     rectangle_circle_overlap,
     rectangle_inside,
 )
-from continuous_maze_env.game.utils.constants import INTERVAL, PLAYER_SPEED
+from continuous_maze_env.game.utils.constants import (
+    INTERVAL,
+    PLAYER_SPEED,
+    WINDOW_WIDTH,
+    WINDOW_HEIGHT,
+    RENDER_SCALE,
+)
 from continuous_maze_env.game.objects.player import Player
 
 LEVELS = {"level_one": LevelOne, "level_two": LevelTwo, "level_three": LevelThree}
@@ -23,7 +29,7 @@ LEVELS = {"level_one": LevelOne, "level_two": LevelTwo, "level_three": LevelThre
 
 class ContinuousMazeGame:
     def __init__(self, level: str, random_start: bool = False, max_steps: int = 2500):
-        self.window = Window(width=800, height=600, visible=False)
+        self.window = Window(width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False)
         glClearColor(0.6667, 0.6471, 1, 1)
         self.level: BaseLevel = LEVELS[level]()
         self.random_start = random_start
@@ -193,21 +199,68 @@ class ContinuousMazeGame:
         reward = 0
         finished = False
         if rectangle_inside(self.player.object, self.level.finish_area):
-            print("Congratulations! You've completed the level!")
+            # print("Congratulations! You've completed the level!")
             reward = 1
             finished = True
         return reward, finished
 
-    def get_window_image(self) -> np.ndarray:
-        width, height = self.window.get_size()
-        buffer = (gl.GLubyte * (width * height * 3))()
-        gl.glReadPixels(0, 0, width, height, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer)
-        arr = np.frombuffer(buffer, dtype=np.uint8)
-        arr = arr.reshape((height, width, 3))
-        arr = np.flip(arr, axis=0).copy()
-        # Convert to grayscale
-        gray_arr = np.dot(arr[..., :3], [0.2989, 0.587, 0.114])
-        return gray_arr
+    def get_window_image(self, resize_shape=None) -> np.ndarray:
+        try:
+            # Make sure we're using the correct context
+            if not hasattr(self, "_gl_context"):
+                # Create a new window and context if needed
+                self.window = Window(
+                    width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False
+                )
+                self._gl_context = self.window.context
+                glClearColor(0.6667, 0.6471, 1, 1)
+
+                # Reinitialize the level and player if needed
+                self.setup_level_and_player(random_start=self.random_start)
+
+            # Make our context current
+            self.window.switch_to()
+
+            # Clear and draw
+            self.window.clear()
+            if self.level and self.level.batch:
+                self.level.batch.draw()
+
+            # Ensure all commands are executed
+            self.window.flip()
+
+            # Read pixels
+            width, height = self.window.get_size()
+            buffer = (gl.GLubyte * (width * height * 3))()
+            gl.glReadPixels(0, 0, width, height, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer)
+
+            # Convert to numpy array
+            arr = np.frombuffer(buffer, dtype=np.uint8)
+            arr = arr.reshape((height, width, 3))
+            arr = np.flip(arr, axis=0).copy()
+
+            # Resize if needed
+            if resize_shape is not None:
+                from PIL import Image
+
+                img = Image.fromarray(arr)
+                img = img.resize(resize_shape[:2][::-1], Image.Resampling.BILINEAR)
+                arr = np.array(img)
+
+            return arr.astype(np.uint8)
+
+        except Exception as e:
+            print(f"Error in get_window_image: {e}")
+            # Clean up and try one more time
+            if hasattr(self, "_gl_context"):
+                delattr(self, "_gl_context")
+            if hasattr(self, "window"):
+                self.window.close()
+                self.window = None
+            return np.zeros(
+                resize_shape if resize_shape else (WINDOW_HEIGHT, WINDOW_WIDTH, 3),
+                dtype=np.uint8,
+            )
 
     def get_reward(self):
         return self.reward

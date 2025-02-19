@@ -2,8 +2,8 @@ import time
 import math
 import random
 
-from continuous_maze_env.game.levels.base_level import BaseLevel, GRID_SIZE
-from continuous_maze_env.game.utils.constants import PLAYER_SIZE
+from continuous_maze_env.game.levels.base_level import BaseLevel
+from continuous_maze_env.game.utils.constants import PLAYER_SIZE, GRID_SIZE
 from pyglet import shapes
 from continuous_maze_env.game.utils.colors import (
     BLACK,

@@ -4,9 +4,6 @@ import pyglet
 from pyglet.shapes import Rectangle, Circle, Line
 
 
-GRID_SIZE = 40
-
-
 class BaseLevel:
     def __init__(self):
         self.batch = pyglet.graphics.Batch()
