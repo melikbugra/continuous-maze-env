@@ -36,8 +36,8 @@ def rectangle_inside(rect1, rect2):
     Check if rect1 is completely inside rect2.
     """
     return (
-        rect1.x + 2 >= rect2.x
-        and rect1.x + rect1.width <= rect2.x + 2 + rect2.width
-        and rect1.y + 2 >= rect2.y
-        and rect1.y + rect1.height <= rect2.y + rect2.height
+        rect1.x + 4 >= rect2.x
+        and rect1.x + rect1.width <= rect2.x + 4 + rect2.width
+        and rect1.y + 4 >= rect2.y
+        and rect1.y + rect1.height <= rect2.y + rect2.height + 4
     )

@@ -682,7 +682,7 @@ class LevelTwo(BaseLevel):
 
         self.finish_area = shapes.Rectangle(
             x=GRID_SIZE * 13 + 2,
-            y=GRID_SIZE * 3 + 2,
+            y=GRID_SIZE * 5 + 2,
             width=GRID_SIZE * 2 - 4,
             height=GRID_SIZE * 2 - 4,
             color=END_ZONE,
@@ -693,8 +693,8 @@ class LevelTwo(BaseLevel):
             self.start_area = self.get_random_start_area()
         else:
             self.start_area = shapes.Rectangle(
-                x=GRID_SIZE * 13 + 2,
-                y=GRID_SIZE * 5 + 2,
+                x=GRID_SIZE * 11 + 2,
+                y=GRID_SIZE * 3 + 2,
                 width=GRID_SIZE * 2 - 4,
                 height=GRID_SIZE * 2 - 4,
                 color=GREEN,

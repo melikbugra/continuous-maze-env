@@ -10,7 +10,7 @@ import pyglet
 from continuous_maze_env.game.game import ContinuousMazeGame
 
 
-class ContinuousMazeEnv(gym.Env):
+class ContinuousMazeVizEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
     def __init__(
@@ -37,17 +37,11 @@ class ContinuousMazeEnv(gym.Env):
             level=level, random_start=random_start, max_steps=max_steps
         )
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
-        # self.observation_space = spaces.Box(
-        #     low=0,
-        #     high=255,
-        #     shape=self.obs_shape,
-        #     dtype=np.uint8,
-        # )
         self.observation_space = spaces.Box(
             low=0,
-            high=1,
-            shape=(2,),
-            dtype=np.float32,
+            high=255,
+            shape=self.obs_shape,
+            dtype=np.uint8,
         )
 
         self.max_steps = max_steps
@@ -62,8 +56,7 @@ class ContinuousMazeEnv(gym.Env):
         # if self.render_mode == "human":
         #     self.game.window.set_visible(True)
 
-        # observation = self.game.get_window_image(resize_shape=self.obs_shape)
-        observation = self._get_normalized_observation()
+        observation = self.game.get_window_image(resize_shape=self.obs_shape)
         info = {}
         return observation, info
 
@@ -73,8 +66,7 @@ class ContinuousMazeEnv(gym.Env):
         self.game.step(horizontal_action, vertical_action)
         self.current_step += 1
 
-        # observation = self.game.get_window_image(resize_shape=self.obs_shape)
-        observation = self._get_normalized_observation()
+        observation = self.game.get_window_image(resize_shape=self.obs_shape)
         reward = self.game.get_reward()
         done = self.game.is_done()
 
@@ -103,8 +95,3 @@ class ContinuousMazeEnv(gym.Env):
         if self.game.window:
             self.game.window.close()
             self.game = None
-
-    def _get_normalized_observation(self):
-        x_normalized = self.game.player.object.x / self.game.window.width
-        y_normalized = self.game.player.object.y / self.game.window.height
-        return np.array([x_normalized, y_normalized], dtype=np.float32).flatten()

@@ -18,7 +18,7 @@ def run_game():
 
 def run_env():
     start_time = perf_counter()
-    env = ContinuousMazeEnv(level="level_two", random_start=True, max_steps=1000)
+    env = ContinuousMazeEnv(level="level_two", random_start=False, max_steps=1000)
     for _ in range(100):
         obs, info = env.reset()
         x = 0
