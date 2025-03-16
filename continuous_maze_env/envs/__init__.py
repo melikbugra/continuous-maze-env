@@ -1,0 +1,2 @@
+from continuous_maze_env.envs.continuous_maze_env import ContinuousMazeEnv
+from continuous_maze_env.envs.continuous_maze_viz_env import ContinuousMazeVizEnv
