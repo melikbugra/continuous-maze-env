@@ -810,16 +810,16 @@ class LevelThree(BaseLevel):
             self.start_area = self.get_random_start_area()
         else:
             self.start_area = shapes.Rectangle(
-                x=GRID_SIZE * 2 + 2,
-                y=GRID_SIZE * 13 + 2,
+                x=GRID_SIZE * 16 + 2,
+                y=GRID_SIZE * 0 + 2,
                 width=GRID_SIZE * 2 - 4,
                 height=GRID_SIZE * 2 - 4,
                 color=GREEN,
                 batch=self.batch,
             )
         self.finish_area = shapes.Rectangle(
-            x=GRID_SIZE * 0 + 2,
-            y=GRID_SIZE * 13 + 2,
+            x=GRID_SIZE * 18 + 2,
+            y=GRID_SIZE * 0 + 2,
             width=GRID_SIZE * 2 - 4,
             height=GRID_SIZE * 2 - 4,
             color=END_ZONE,
