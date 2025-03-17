@@ -819,7 +819,7 @@ class LevelThree(BaseLevel):
             )
         self.finish_area = shapes.Rectangle(
             x=GRID_SIZE * 18 + 2,
-            y=GRID_SIZE * 0 + 2,
+            y=GRID_SIZE * 2 + 2,
             width=GRID_SIZE * 2 - 4,
             height=GRID_SIZE * 2 - 4,
             color=END_ZONE,
