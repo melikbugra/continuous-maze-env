@@ -38,6 +38,15 @@ class ContinuousMazeGame:
         self.setup_level_and_player(random_start=self.random_start)
 
     def setup_rendering(self):
+        # Re-create the window if it doesn't exist
+        if self.window is None:
+            self.window = Window(
+                width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False
+            )
+            glClearColor(0.6667, 0.6471, 1, 1)
+            # Re-setup the level and player since they might depend on the window
+            self.setup_level_and_player(random_start=self.random_start)
+
         # make the window visible
         self.window.set_visible()
 
