@@ -219,7 +219,10 @@ class ContinuousMazeGame:
         finished = False
         if rectangle_inside(self.player.object, self.level.finish_area):
             # print("Congratulations! You've completed the level!")
-            reward = 1
+            if self.constant_penalty:
+                reward = 10
+            else:
+                reward = 1
             finished = True
         return reward, finished
 
