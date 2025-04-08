@@ -28,7 +28,14 @@ LEVELS = {"level_one": LevelOne, "level_two": LevelTwo, "level_three": LevelThre
 
 
 class ContinuousMazeGame:
-    def __init__(self, level: str, random_start: bool = False, max_steps: int = 2500):
+    def __init__(
+        self,
+        level: str,
+        random_start: bool = False,
+        max_steps: int = 2500,
+        constant_penalty: bool = False,
+    ):
+        self.constant_penalty = constant_penalty
         self.window = Window(width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False)
         glClearColor(0.6667, 0.6471, 1, 1)
         self.level: BaseLevel = LEVELS[level]()
@@ -111,7 +118,10 @@ class ContinuousMazeGame:
             finished = True
         else:
             if not finished:
-                reward = -1 / self.max_steps
+                if self.constant_penalty:
+                    reward = -0.001
+                else:
+                    reward = -1 / self.max_steps
         self.reward = reward
         self.finished = finished
 

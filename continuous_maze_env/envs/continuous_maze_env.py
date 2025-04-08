@@ -19,11 +19,9 @@ class ContinuousMazeEnv(gym.Env):
         level: str = "level_one",
         max_steps=2500,
         random_start: bool = False,
-        obs_shape=(96, 96, 3),
+        constant_penalty: bool = False,
     ):
         super().__init__()
-
-        self.obs_shape = obs_shape
 
         # Create a display for offscreen rendering if needed
         if render_mode == "rgb_array":
@@ -34,15 +32,12 @@ class ContinuousMazeEnv(gym.Env):
             self._context.set_current()
 
         self.game = ContinuousMazeGame(
-            level=level, random_start=random_start, max_steps=max_steps
+            level=level,
+            random_start=random_start,
+            max_steps=max_steps,
+            constant_penalty=constant_penalty,
         )
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
-        # self.observation_space = spaces.Box(
-        #     low=0,
-        #     high=255,
-        #     shape=self.obs_shape,
-        #     dtype=np.uint8,
-        # )
         self.observation_space = spaces.Box(
             low=0,
             high=1,
