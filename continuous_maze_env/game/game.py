@@ -4,6 +4,7 @@ from pyglet.window import key, Window
 from continuous_maze_env.game.levels.level_one import LevelOne
 from continuous_maze_env.game.levels.level_two import LevelTwo
 from continuous_maze_env.game.levels.level_three import LevelThree
+from continuous_maze_env.game.levels.level_four import LevelFour
 from continuous_maze_env.game.levels.base_level import BaseLevel
 import time
 import numpy as np
@@ -24,7 +25,12 @@ from continuous_maze_env.game.utils.constants import (
 )
 from continuous_maze_env.game.objects.player import Player
 
-LEVELS = {"level_one": LevelOne, "level_two": LevelTwo, "level_three": LevelThree}
+LEVELS = {
+    "level_one": LevelOne,
+    "level_two": LevelTwo,
+    "level_three": LevelThree,
+    "level_four": LevelFour,
+}
 
 
 class ContinuousMazeGame:

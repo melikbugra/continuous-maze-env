@@ -1,6 +1,8 @@
 from continuous_maze_env.game.game import ContinuousMazeGame
 from continuous_maze_env.game.levels.level_one import LevelOne
 from continuous_maze_env.game.levels.level_two import LevelTwo
+from continuous_maze_env.game.levels.level_three import LevelThree
+from continuous_maze_env.game.levels.level_four import LevelFour
 from continuous_maze_env.envs.continuous_maze_env import ContinuousMazeEnv
 
 
@@ -18,7 +20,7 @@ def run_game():
 
 def run_env():
     start_time = perf_counter()
-    env = ContinuousMazeEnv(level="level_three", random_start=False, max_steps=1000)
+    env = ContinuousMazeEnv(level="level_four", random_start=False, max_steps=1000)
     for _ in range(100):
         obs, info = env.reset()
         x = 0
