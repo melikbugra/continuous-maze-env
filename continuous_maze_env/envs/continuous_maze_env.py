@@ -99,8 +99,17 @@ class ContinuousMazeEnv(gym.Env):
         self.game.window.flip()
 
     def close(self):
-        if self.game.window:
-            self.game.window.close()
+        game = getattr(self, "game", None)
+        if game is None:
+            return
+        try:
+            window = getattr(game, "window", None)
+            if window is not None:
+                try:
+                    window.close()
+                except Exception:
+                    pass
+        finally:
             self.game = None
 
     def _get_normalized_observation(self):
