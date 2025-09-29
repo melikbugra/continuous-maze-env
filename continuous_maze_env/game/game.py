@@ -40,23 +40,48 @@ class ContinuousMazeGame:
         random_start: bool = False,
         max_steps: int = 2500,
         constant_penalty: bool = False,
+        headless: bool = False,
     ):
+        """Core game object.
+
+        headless: when True, avoids creating a Pyglet window and GL context until
+        an explicit render or image capture is requested. This substantially
+        speeds up training loops that don't need pixels.
+        """
         self.constant_penalty = constant_penalty
-        self.window = Window(width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False)
-        glClearColor(0.6667, 0.6471, 1, 1)
+        self.headless = headless
+        self.window = None
+        if not self.headless:
+            self.window = Window(
+                width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False, vsync=False
+            )
+            glClearColor(0.6667, 0.6471, 1, 1)
+            # Ensure vsync is disabled (defensive)
+            try:
+                self.window.set_vsync(False)
+            except Exception:
+                pass
         self.level: BaseLevel = LEVELS[level]()
         self.random_start = random_start
         self.eliminated = False
         self.max_steps = max_steps
+        # Precompute step penalty to avoid per-step division
+        self._step_penalty = (
+            -0.001 if self.constant_penalty else (-1.0 / self.max_steps)
+        )
         self.setup_level_and_player(random_start=self.random_start)
 
     def setup_rendering(self):
         # Re-create the window if it doesn't exist
         if self.window is None:
             self.window = Window(
-                width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False
+                width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False, vsync=False
             )
             glClearColor(0.6667, 0.6471, 1, 1)
+            try:
+                self.window.set_vsync(False)
+            except Exception:
+                pass
             # Re-setup the level and player since they might depend on the window
             self.setup_level_and_player(random_start=self.random_start)
 
@@ -112,7 +137,8 @@ class ContinuousMazeGame:
             if not self.check_collision(self.player.object.x, player_new_y):
                 self.player.object.y = player_new_y
         elif collision == 2:
-            print("You lose!")
+            # Avoid printing in training loops for performance
+            # print("You lose!")
             self.eliminated = True
 
         self.level.update()
@@ -124,21 +150,17 @@ class ContinuousMazeGame:
             finished = True
         else:
             if not finished:
-                if self.constant_penalty:
-                    reward = -0.001
-                else:
-                    reward = -1 / self.max_steps
+                reward = self._step_penalty
         self.reward = reward
         self.finished = finished
 
+        # Debug plotting hooks (kept for reference)
         # import matplotlib.pyplot as plt
+        # plt.imshow(self.get_window_image(), cmap="gray"); plt.show()
 
-        # print(self.get_window_image())
-
-        # plt.imshow(self.get_window_image(), cmap="gray")
-        # plt.show()
-
-        if finished or self.eliminated:
+        # In headless (training) mode, let the gym env call reset() explicitly.
+        # Keep auto-reset for interactive play when a window is visible.
+        if not self.headless and (finished or self.eliminated):
             self.reset_game()
 
     def step(
@@ -197,13 +219,19 @@ class ContinuousMazeGame:
             ),
         ]
 
-        # Check collision with each wall line
+        # Check collision with each wall line, but first perform fast AABB culling
+        p_left = player_rect["left"]
+        p_right = player_rect["right"]
+        p_bottom = player_rect["bottom"]
+        p_top = player_rect["top"]
         for line in self.level.wall_lines:
-            if line.y == line.y2:
-                # wall_line = ((line.x + 2, line.y), (line.x2 - 2, line.y2))
-                wall_line = ((line.x, line.y), (line.x2, line.y2))
-            else:
-                wall_line = ((line.x, line.y), (line.x2, line.y2))
+            # Line segment AABB
+            lx1, lx2 = (line.x, line.x2) if line.x <= line.x2 else (line.x2, line.x)
+            ly1, ly2 = (line.y, line.y2) if line.y <= line.y2 else (line.y2, line.y)
+            # Quick reject if AABBs don't overlap
+            if lx2 < p_left or lx1 > p_right or ly2 < p_bottom or ly1 > p_top:
+                continue
+            wall_line = ((line.x, line.y), (line.x2, line.y2))
             for edge in player_edges:
                 if line_segments_intersect(
                     edge[0], edge[1], wall_line[0], wall_line[1]
@@ -238,10 +266,14 @@ class ContinuousMazeGame:
             if not hasattr(self, "_gl_context"):
                 # Create a new window and context if needed
                 self.window = Window(
-                    width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False
+                    width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False, vsync=False
                 )
                 self._gl_context = self.window.context
                 glClearColor(0.6667, 0.6471, 1, 1)
+                try:
+                    self.window.set_vsync(False)
+                except Exception:
+                    pass
 
                 # Reinitialize the level and player if needed
                 self.setup_level_and_player(random_start=self.random_start)

@@ -9,6 +9,9 @@ import pyglet
 
 from continuous_maze_env.game.game import ContinuousMazeGame
 
+# Use constants to avoid needing a visible window in headless mode
+from continuous_maze_env.game.utils.constants import WINDOW_WIDTH, WINDOW_HEIGHT
+
 
 class ContinuousMazeEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
@@ -36,6 +39,7 @@ class ContinuousMazeEnv(gym.Env):
             random_start=random_start,
             max_steps=max_steps,
             constant_penalty=constant_penalty,
+            headless=(render_mode is None),
         )
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
         self.observation_space = spaces.Box(
@@ -83,6 +87,7 @@ class ContinuousMazeEnv(gym.Env):
     def render(self, mode="human"):
         if self.render_mode == "rgb_array":
             return self.game.get_window_image()  # Full size for rendering
+        # human mode
         self.game.setup_rendering()
         self.game.window.switch_to()
         self.game.window.dispatch_events()
@@ -90,9 +95,6 @@ class ContinuousMazeEnv(gym.Env):
         if self.game.level and self.game.level.batch:
             self.game.level.batch.draw()
         self.game.window.flip()
-        if self.game.level and self.game.level.batch:
-            self.game.level.batch.draw()
-            pass
 
     def close(self):
         if self.game.window:
@@ -100,6 +102,7 @@ class ContinuousMazeEnv(gym.Env):
             self.game = None
 
     def _get_normalized_observation(self):
-        x_normalized = self.game.player.object.x / self.game.window.width
-        y_normalized = self.game.player.object.y / self.game.window.height
+
+        x_normalized = self.game.player.object.x / WINDOW_WIDTH
+        y_normalized = self.game.player.object.y / WINDOW_HEIGHT
         return np.array([x_normalized, y_normalized], dtype=np.float32).flatten()

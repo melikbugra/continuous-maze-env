@@ -39,6 +39,7 @@ class ContinuousMazeVizEnv(gym.Env):
             random_start=random_start,
             max_steps=max_steps,
             constant_penalty=constant_penalty,
+            headless=(render_mode is None),
         )
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
         self.observation_space = spaces.Box(
@@ -91,9 +92,7 @@ class ContinuousMazeVizEnv(gym.Env):
         if self.game.level and self.game.level.batch:
             self.game.level.batch.draw()
         self.game.window.flip()
-        if self.game.level and self.game.level.batch:
-            self.game.level.batch.draw()
-            pass
+        # single draw per frame is enough
 
     def close(self):
         if self.game.window:
