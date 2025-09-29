@@ -4,6 +4,8 @@ from continuous_maze_env.game.levels.level_two import LevelTwo
 from continuous_maze_env.game.levels.level_three import LevelThree
 from continuous_maze_env.game.levels.level_four import LevelFour
 from continuous_maze_env.envs.continuous_maze_env import ContinuousMazeEnv
+import gymnasium as gym
+import continuous_maze_env
 
 
 from time import perf_counter
@@ -20,22 +22,35 @@ def run_game():
 
 def run_env():
     start_time = perf_counter()
-    env = ContinuousMazeEnv(
-        level="level_four", random_start=False, max_steps=1000, render_mode=None
+    # env = ContinuousMazeEnv(
+    #     level="level_four", random_start=True, max_steps=1000, render_mode=None
+    # )
+
+    env = gym.make(
+        "ContinuousMaze-v0",
+        level="level_four",
+        max_steps=1000,
+        random_start=False,
+        render_mode=None,
     )
-    for _ in range(100):
-        obs, info = env.reset()
-        x = 0
-        done = False
-        while not done:
-            action = env.action_space.sample()
-            # print(action)
-            obs, rew, term, trun, info = env.step(action)
-            # env.render()
-            x += 1
-            # if x > 100:
-            #     break
-            done = term or trun
+
+    obs, info = env.reset()
+    x = 0
+    done = False
+    while not done:
+        action = env.action_space.sample()
+        # print(action)
+        obs, rew, term, trun, info = env.step(action)
+        env.render()
+        x += 1
+        # if x > 100:
+        #     break
+        done = term or trun
+
+        if term:
+            print("Goal reached!")
+        if trun:
+            print("Max steps reached!")
 
     print(f"Time taken: {perf_counter() - start_time}")
 

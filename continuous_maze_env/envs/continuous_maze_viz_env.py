@@ -21,6 +21,7 @@ class ContinuousMazeVizEnv(gym.Env):
         random_start: bool = False,
         obs_shape=(96, 96, 3),
         constant_penalty: bool = False,
+        dense_reward: bool = False,
     ):
         super().__init__()
 
@@ -40,6 +41,7 @@ class ContinuousMazeVizEnv(gym.Env):
             max_steps=max_steps,
             constant_penalty=constant_penalty,
             headless=(render_mode is None),
+            dense_reward=dense_reward,
         )
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
         self.observation_space = spaces.Box(

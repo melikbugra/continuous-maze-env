@@ -41,6 +41,7 @@ class ContinuousMazeGame:
         max_steps: int = 2500,
         constant_penalty: bool = False,
         headless: bool = False,
+        dense_reward: bool = False,
     ):
         """Core game object.
 
@@ -49,6 +50,7 @@ class ContinuousMazeGame:
         speeds up training loops that don't need pixels.
         """
         self.constant_penalty = constant_penalty
+        self.dense_reward = dense_reward
         self.headless = headless
         self.window = None
         if not self.headless:
@@ -69,6 +71,8 @@ class ContinuousMazeGame:
         self._step_penalty = (
             -0.001 if self.constant_penalty else (-1.0 / self.max_steps)
         )
+        # Distance tracking for dense rewards
+        self._max_diag = float((WINDOW_WIDTH**2 + WINDOW_HEIGHT**2) ** 0.5)
         self.setup_level_and_player(random_start=self.random_start)
 
     def setup_rendering(self):
@@ -118,6 +122,8 @@ class ContinuousMazeGame:
         horiztontal_action: float = None,
         vertical_action: float = None,
     ):
+        # Cache previous normalized distance for dense reward shaping
+        prev_dist_norm = self.prev_dist_norm if self.dense_reward else None
         player_new_x, player_new_y = self.player.update(
             horiztontal_action, vertical_action
         )
@@ -150,7 +156,22 @@ class ContinuousMazeGame:
             finished = True
         else:
             if not finished:
-                reward = self._step_penalty
+                if self.dense_reward:
+                    # Dense shaping: positive when getting closer
+                    current_dist_norm = self._normalized_distance_to_goal()
+                    shaping = (
+                        0.0
+                        if prev_dist_norm is None
+                        else (prev_dist_norm - current_dist_norm)
+                    )
+                    reward = shaping
+                    # Optional baseline penalty to prefer faster completion
+                    if self.constant_penalty:
+                        reward += -0.001
+                    # Update prev distance after computing reward
+                    self.prev_dist_norm = current_dist_norm
+                else:
+                    reward = self._step_penalty
         self.reward = reward
         self.finished = finished
 
@@ -181,6 +202,8 @@ class ContinuousMazeGame:
         )
         if self.window:
             self.setup_key_handler()
+        # Initialize distance tracker when level/player are ready
+        self.prev_dist_norm = self._normalized_distance_to_goal()
 
     def check_collision(self, new_x, new_y):
         """
@@ -259,6 +282,26 @@ class ContinuousMazeGame:
                 reward = 1
             finished = True
         return reward, finished
+
+    def _normalized_distance_to_goal(self) -> float:
+        """Euclidean distance from player center to the closest point of the finish area,
+        normalized by the window diagonal, so it's in [0, ~1]. Inside goal => 0.
+        """
+        # Player center
+        pcx = self.player.object.x + self.player.object.width / 2.0
+        pcy = self.player.object.y + self.player.object.height / 2.0
+        # Finish rect bounds
+        fx1 = self.level.finish_area.x
+        fy1 = self.level.finish_area.y
+        fx2 = fx1 + self.level.finish_area.width
+        fy2 = fy1 + self.level.finish_area.height
+        # Closest point on finish rect to player center (clamp)
+        cx = min(max(pcx, fx1), fx2)
+        cy = min(max(pcy, fy1), fy2)
+        dx = pcx - cx
+        dy = pcy - cy
+        dist = (dx * dx + dy * dy) ** 0.5
+        return float(dist / self._max_diag) if self._max_diag > 0 else 0.0
 
     def get_window_image(self, resize_shape=None) -> np.ndarray:
         try:
