@@ -20,7 +20,9 @@ def run_game():
 
 def run_env():
     start_time = perf_counter()
-    env = ContinuousMazeEnv(level="level_four", random_start=False, max_steps=1000)
+    env = ContinuousMazeEnv(
+        level="level_four", random_start=False, max_steps=1000, render_mode=None
+    )
     for _ in range(100):
         obs, info = env.reset()
         x = 0
@@ -29,7 +31,7 @@ def run_env():
             action = env.action_space.sample()
             # print(action)
             obs, rew, term, trun, info = env.step(action)
-            env.render()
+            # env.render()
             x += 1
             # if x > 100:
             #     break
