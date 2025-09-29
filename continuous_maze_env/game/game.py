@@ -157,18 +157,9 @@ class ContinuousMazeGame:
         else:
             if not finished:
                 if self.dense_reward:
-                    # Dense shaping: positive when getting closer
+                    # Dense reward: negative normalized distance to goal
                     current_dist_norm = self._normalized_distance_to_goal()
-                    shaping = (
-                        0.0
-                        if prev_dist_norm is None
-                        else (prev_dist_norm - current_dist_norm)
-                    )
-                    reward = shaping
-                    # Optional baseline penalty to prefer faster completion
-                    if self.constant_penalty:
-                        reward += -0.001
-                    # Update prev distance after computing reward
+                    reward = -current_dist_norm
                     self.prev_dist_norm = current_dist_norm
                 else:
                     reward = self._step_penalty
