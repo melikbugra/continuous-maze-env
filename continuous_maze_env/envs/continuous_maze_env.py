@@ -27,6 +27,14 @@ class ContinuousMazeEnv(gym.Env):
     ):
         super().__init__()
 
+        # Persist config for safe re-creation after close()
+        self.level = level
+        self.max_steps = max_steps
+        self.random_start = random_start
+        self.constant_penalty = constant_penalty
+        self.dense_reward = dense_reward
+        self.render_mode = render_mode
+
         # Create a display for offscreen rendering if needed
         if render_mode == "rgb_array":
             display = pyglet.canvas.get_display()
@@ -36,12 +44,12 @@ class ContinuousMazeEnv(gym.Env):
             self._context.set_current()
 
         self.game = ContinuousMazeGame(
-            level=level,
-            random_start=random_start,
-            max_steps=max_steps,
-            constant_penalty=constant_penalty,
-            headless=(render_mode is None),
-            dense_reward=dense_reward,
+            level=self.level,
+            random_start=self.random_start,
+            max_steps=self.max_steps,
+            constant_penalty=self.constant_penalty,
+            headless=(self.render_mode is None),
+            dense_reward=self.dense_reward,
         )
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
         self.observation_space = spaces.Box(
@@ -51,13 +59,22 @@ class ContinuousMazeEnv(gym.Env):
             dtype=np.float32,
         )
 
-        self.max_steps = max_steps
         self.current_step = 0
-        self.render_mode = render_mode
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed, options=options)
-        self.game.reset_game()
+        # If env was closed earlier, re-create the game on reset
+        if self.game is None:
+            self.game = ContinuousMazeGame(
+                level=self.level,
+                random_start=self.random_start,
+                max_steps=self.max_steps,
+                constant_penalty=self.constant_penalty,
+                headless=(self.render_mode is None),
+                dense_reward=self.dense_reward,
+            )
+        else:
+            self.game.reset_game()
         self.current_step = 0
 
         # if self.render_mode == "human":
