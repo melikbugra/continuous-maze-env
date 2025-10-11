@@ -239,23 +239,40 @@ class ContinuousMazeGame:
         p_right = player_rect["right"]
         p_bottom = player_rect["bottom"]
         p_top = player_rect["top"]
-        # Iterate over wall segments; prefer precomputed AABBs if available
+        # If a spatial grid is available, query candidate walls from overlapping cells
         wall_lines = self.level.wall_lines
         wall_aabbs = getattr(self.level, "wall_aabbs", None)
-        if wall_aabbs and len(wall_aabbs) == len(wall_lines):
-            iterator = zip(wall_lines, wall_aabbs)
-            use_cache = True
-        else:
-            iterator = ((line, None) for line in wall_lines)
-            use_cache = False
+        wall_grid = getattr(self.level, "wall_grid", None)
+        cell_size = getattr(self.level, "grid_cell_size", None)
+        candidates = None
+        if wall_grid and cell_size:
+            inv_cs = 1.0 / float(cell_size)
+            ix1 = int(math.floor(p_left * inv_cs))
+            ix2 = int(math.floor(p_right * inv_cs))
+            iy1 = int(math.floor(p_bottom * inv_cs))
+            iy2 = int(math.floor(p_top * inv_cs))
+            idxs = set()
+            for ix in range(ix1, ix2 + 1):
+                for iy in range(iy1, iy2 + 1):
+                    lst = wall_grid.get((ix, iy))
+                    if lst:
+                        idxs.update(lst)
+            candidates = list(idxs)
 
-        for line, aabb in iterator:
+        if candidates is None:
+            # Fall back to scanning all
+            indices = range(len(wall_lines))
+        else:
+            indices = candidates
+
+        use_cache = bool(wall_aabbs) and (len(wall_aabbs) == len(wall_lines))
+        for idx in indices:
+            line = wall_lines[idx]
             if use_cache:
-                lx1, lx2, ly1, ly2 = aabb
+                lx1, lx2, ly1, ly2 = wall_aabbs[idx]
             else:
                 lx1, lx2 = (line.x, line.x2) if line.x <= line.x2 else (line.x2, line.x)
                 ly1, ly2 = (line.y, line.y2) if line.y <= line.y2 else (line.y2, line.y)
-            # Quick reject if AABBs don't overlap
             if lx2 < p_left or lx1 > p_right or ly2 < p_bottom or ly1 > p_top:
                 continue
             wall_line = ((line.x, line.y), (line.x2, line.y2))

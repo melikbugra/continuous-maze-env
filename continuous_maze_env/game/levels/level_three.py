@@ -805,8 +805,11 @@ class LevelThree(BaseLevel):
                 ),
             ]
         )
-        # Precompute AABBs for faster collision checks
+        # Precompute AABBs for faster collision checks and build spatial index
         self.compute_wall_aabbs()
+        from continuous_maze_env.game.utils.constants import GRID_SIZE
+
+        self.build_spatial_index(cell_size=GRID_SIZE)
 
         if random_start:
             self.start_area = self.get_random_start_area()
