@@ -6,6 +6,7 @@ from continuous_maze_env.game.levels.level_four import LevelFour
 from continuous_maze_env.envs.continuous_maze_env import ContinuousMazeEnv
 import gymnasium as gym
 import continuous_maze_env
+from time import sleep
 
 
 from time import perf_counter
@@ -13,7 +14,7 @@ from time import perf_counter
 
 def run_game():
     start_time = perf_counter()
-    game = ContinuousMazeGame(level="level_one", random_start=True)
+    game = ContinuousMazeGame(level="level_two", random_start=True)
     game.setup_rendering()
 
     game.run()
@@ -28,9 +29,9 @@ def run_env():
 
     env = gym.make(
         "ContinuousMaze-v0",
-        level="level_four",
-        max_steps=1000,
-        random_start=False,
+        level="level_three",
+        max_steps=200,
+        random_start=True,
         render_mode=None,
     )
 
@@ -39,9 +40,10 @@ def run_env():
     done = False
     while not done:
         action = env.action_space.sample()
+        # sleep(0.02)
         # print(action)
         obs, rew, term, trun, info = env.step(action)
-        env.render()
+        # env.render()
         x += 1
         # if x > 100:
         #     break

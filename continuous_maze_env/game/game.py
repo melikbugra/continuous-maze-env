@@ -22,6 +22,8 @@ from continuous_maze_env.game.utils.constants import (
     WINDOW_WIDTH,
     WINDOW_HEIGHT,
     RENDER_SCALE,
+    PHYSICS_MAX_PIXEL_STEP,
+    SIMULATION_UPDATES_PER_STEP,
 )
 from continuous_maze_env.game.objects.player import Player
 
@@ -122,36 +124,54 @@ class ContinuousMazeGame:
         horiztontal_action: float = None,
         vertical_action: float = None,
     ):
-        # Cache previous normalized distance for dense reward shaping
-        prev_dist_norm = self.prev_dist_norm if self.dense_reward else None
-        player_new_x, player_new_y = self.player.update(
-            horiztontal_action, vertical_action
+        # Compute intended displacement from player controls
+        start_x = float(self.player.object.x)
+        start_y = float(self.player.object.y)
+        target_x, target_y = self.player.update(horiztontal_action, vertical_action)
+
+        total_dx = float(target_x) - start_x
+        total_dy = float(target_y) - start_y
+
+        # Determine how many micro-steps are needed to keep per-step motion small
+        max_disp = max(abs(total_dx), abs(total_dy))
+        steps = (
+            1
+            if max_disp <= 0
+            else int((max_disp + PHYSICS_MAX_PIXEL_STEP - 1) // PHYSICS_MAX_PIXEL_STEP)
         )
+        steps = max(1, steps)
+        step_dx = total_dx / steps
+        step_dy = total_dy / steps
 
-        collision = self.check_collision(player_new_x, player_new_y)
+        collision = 0
+        # Apply micro-steps with collision resolution
+        for _ in range(steps):
+            proposed_x = float(self.player.object.x) + step_dx
+            proposed_y = float(self.player.object.y) + step_dy
+            collision = self.check_collision(proposed_x, proposed_y)
 
-        if collision == 0:
-            self.player.object.x = player_new_x
-            self.player.object.y = player_new_y
-            self.eliminated = False
+            if collision == 0:
+                self.player.object.x = proposed_x
+                self.player.object.y = proposed_y
+                self.eliminated = False
+            elif collision == 1:
+                # Try moving along x-axis only
+                if not self.check_collision(proposed_x, self.player.object.y):
+                    self.player.object.x = proposed_x
+                # Try moving along y-axis only
+                if not self.check_collision(self.player.object.x, proposed_y):
+                    self.player.object.y = proposed_y
+            elif collision == 2:
+                # Enemy collision ends the episode
+                self.eliminated = True
+                break
 
-        elif collision == 1:
-            # Try moving along x-axis only
-            if not self.check_collision(player_new_x, self.player.object.y):
-                self.player.object.x = player_new_x
-            # Try moving along y-axis only
-            if not self.check_collision(self.player.object.x, player_new_y):
-                self.player.object.y = player_new_y
-        elif collision == 2:
-            # Avoid printing in training loops for performance
-            # print("You lose!")
-            self.eliminated = True
-
+        # Advance level dynamics once per update call
         self.level.update()
 
-        # Check if player is completely inside the finish area
+        # Compute reward and done once per update call
         reward, finished = self.player_in_finish_area(interval)
-        if collision == 2:
+        if self.eliminated:
             reward = -1
             finished = True
         else:
@@ -180,11 +200,15 @@ class ContinuousMazeGame:
         horiztontal_action: float = None,
         vertical_action: float = None,
     ):
-        self.update(
-            interval=INTERVAL,
-            horiztontal_action=horiztontal_action,
-            vertical_action=vertical_action,
-        )
+        # Run multiple physics updates per env step to accelerate episodes
+        for _ in range(SIMULATION_UPDATES_PER_STEP):
+            self.update(
+                interval=INTERVAL,
+                horiztontal_action=horiztontal_action,
+                vertical_action=vertical_action,
+            )
+            if self.finished or self.eliminated:
+                break
 
     def setup_level_and_player(self, random_start: bool = False):
         self.level.setup_level(random_start=random_start)

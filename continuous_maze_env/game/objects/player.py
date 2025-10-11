@@ -26,25 +26,28 @@ class Player:
 
     def update(
         self, horiztontal_action: float = None, vertical_action: float = None
-    ) -> tuple[int, int]:
-        dx = dy = 0
+    ) -> tuple[float, float]:
+        total_dx = 0.0
+        total_dy = 0.0
 
         # in game mode speed is constant, but in gymnasium env mode it depends on the actions
         if horiztontal_action is not None and vertical_action is not None:
-            dx += horiztontal_action * PLAYER_SPEED * INTERVAL
-            dy += vertical_action * PLAYER_SPEED * INTERVAL
+            total_dx += float(horiztontal_action) * PLAYER_SPEED * INTERVAL
+            total_dy += float(vertical_action) * PLAYER_SPEED * INTERVAL
         else:
             if self.key_handler is not None:
                 if self.key_handler[key.LEFT]:
-                    dx -= PLAYER_SPEED * INTERVAL
+                    total_dx -= PLAYER_SPEED * INTERVAL
                 if self.key_handler[key.RIGHT]:
-                    dx += PLAYER_SPEED * INTERVAL
+                    total_dx += PLAYER_SPEED * INTERVAL
                 if self.key_handler[key.UP]:
-                    dy += PLAYER_SPEED * INTERVAL
+                    total_dy += PLAYER_SPEED * INTERVAL
                 if self.key_handler[key.DOWN]:
-                    dy -= PLAYER_SPEED * INTERVAL
+                    total_dy -= PLAYER_SPEED * INTERVAL
 
-        new_x = self.object.x + dx
-        new_y = self.object.y + dy
+        # The collision is resolved in Game.update; here we only compute the intended
+        # new position for this physics update based on controls and INTERVAL.
+        new_x = self.object.x + total_dx
+        new_y = self.object.y + total_dy
 
-        return new_x, new_y
+        return float(new_x), float(new_y)
