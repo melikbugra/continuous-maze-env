@@ -185,6 +185,8 @@ class LevelOne(BaseLevel):
                 ),
             ]
         )
+        # Precompute AABBs for faster collision checks
+        self.compute_wall_aabbs()
 
         self.finish_area = shapes.Rectangle(
             x=GRID_SIZE * 13 + 2,

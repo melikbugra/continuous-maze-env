@@ -10,6 +10,7 @@ import time
 import numpy as np
 from pyglet.gl import glClearColor
 from pyglet import gl
+import math
 
 from continuous_maze_env.game.utils.functions import (
     line_segments_intersect,
@@ -72,7 +73,7 @@ class ContinuousMazeGame:
             -0.001 if self.constant_penalty else (-1.0 / self.max_steps)
         )
         # Distance tracking for dense rewards
-        self._max_diag = float((WINDOW_WIDTH**2 + WINDOW_HEIGHT**2) ** 0.5)
+        self._max_diag = float(math.hypot(WINDOW_WIDTH, WINDOW_HEIGHT))
         self.setup_level_and_player(random_start=self.random_start)
 
     def setup_rendering(self):
@@ -238,10 +239,22 @@ class ContinuousMazeGame:
         p_right = player_rect["right"]
         p_bottom = player_rect["bottom"]
         p_top = player_rect["top"]
-        for line in self.level.wall_lines:
-            # Line segment AABB
-            lx1, lx2 = (line.x, line.x2) if line.x <= line.x2 else (line.x2, line.x)
-            ly1, ly2 = (line.y, line.y2) if line.y <= line.y2 else (line.y2, line.y)
+        # Iterate over wall segments; prefer precomputed AABBs if available
+        wall_lines = self.level.wall_lines
+        wall_aabbs = getattr(self.level, "wall_aabbs", None)
+        if wall_aabbs and len(wall_aabbs) == len(wall_lines):
+            iterator = zip(wall_lines, wall_aabbs)
+            use_cache = True
+        else:
+            iterator = ((line, None) for line in wall_lines)
+            use_cache = False
+
+        for line, aabb in iterator:
+            if use_cache:
+                lx1, lx2, ly1, ly2 = aabb
+            else:
+                lx1, lx2 = (line.x, line.x2) if line.x <= line.x2 else (line.x2, line.x)
+                ly1, ly2 = (line.y, line.y2) if line.y <= line.y2 else (line.y2, line.y)
             # Quick reject if AABBs don't overlap
             if lx2 < p_left or lx1 > p_right or ly2 < p_bottom or ly1 > p_top:
                 continue
@@ -291,7 +304,7 @@ class ContinuousMazeGame:
         cy = min(max(pcy, fy1), fy2)
         dx = pcx - cx
         dy = pcy - cy
-        dist = (dx * dx + dy * dy) ** 0.5
+        dist = math.hypot(dx, dy)
         return float(dist / self._max_diag) if self._max_diag > 0 else 0.0
 
     def get_window_image(self, resize_shape=None) -> np.ndarray:

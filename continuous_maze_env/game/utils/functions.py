@@ -1,15 +1,18 @@
 from pyglet.shapes import Rectangle, Circle
 
 
+def _ccw(a, b, c):
+    # Counter-clockwise test. Keeping this at module scope avoids re-defining it per call.
+    return (c[1] - a[1]) * (b[0] - a[0]) > (b[1] - a[1]) * (c[0] - a[0])
+
+
 def line_segments_intersect(p1, p2, q1, q2):
     """
     Check if line segments p1-p2 and q1-q2 intersect.
     """
-
-    def ccw(a, b, c):
-        return (c[1] - a[1]) * (b[0] - a[0]) > (b[1] - a[1]) * (c[0] - a[0])
-
-    return (ccw(p1, q1, q2) != ccw(p2, q1, q2)) and (ccw(p1, p2, q1) != ccw(p1, p2, q2))
+    return (_ccw(p1, q1, q2) != _ccw(p2, q1, q2)) and (
+        _ccw(p1, p2, q1) != _ccw(p1, p2, q2)
+    )
 
 
 def rectangle_circle_overlap(rect: Rectangle, circle: Circle) -> bool:

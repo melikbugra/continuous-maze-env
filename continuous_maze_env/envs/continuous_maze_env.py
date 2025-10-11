@@ -60,6 +60,11 @@ class ContinuousMazeEnv(gym.Env):
         )
 
         self.current_step = 0
+        # Cache inverses for normalization to avoid per-step division
+        self._inv_w = 1.0 / float(WINDOW_WIDTH)
+        self._inv_h = 1.0 / float(WINDOW_HEIGHT)
+        # Reusable observation buffer
+        self._obs_buf = np.empty((2,), dtype=np.float32)
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed, options=options)
@@ -130,7 +135,7 @@ class ContinuousMazeEnv(gym.Env):
             self.game = None
 
     def _get_normalized_observation(self):
-
-        x_normalized = self.game.player.object.x / WINDOW_WIDTH
-        y_normalized = self.game.player.object.y / WINDOW_HEIGHT
-        return np.array([x_normalized, y_normalized], dtype=np.float32).flatten()
+        # Use cached inverses and a reusable buffer to minimize allocations
+        self._obs_buf[0] = float(self.game.player.object.x) * self._inv_w
+        self._obs_buf[1] = float(self.game.player.object.y) * self._inv_h
+        return self._obs_buf

@@ -652,6 +652,8 @@ class LevelTwo(BaseLevel):
                 ),
             ]
         )
+        # Precompute AABBs for faster collision checks
+        self.compute_wall_aabbs()
 
         # self.wall_lines = [
         #     shapes.Line(

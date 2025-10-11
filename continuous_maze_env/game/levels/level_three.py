@@ -805,6 +805,8 @@ class LevelThree(BaseLevel):
                 ),
             ]
         )
+        # Precompute AABBs for faster collision checks
+        self.compute_wall_aabbs()
 
         if random_start:
             self.start_area = self.get_random_start_area()

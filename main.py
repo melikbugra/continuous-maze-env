@@ -29,8 +29,8 @@ def run_env():
     env = gym.make(
         "ContinuousMaze-v0",
         level="level_four",
-        max_steps=1000,
-        random_start=False,
+        max_steps=50,
+        random_start=True,
         render_mode=None,
     )
 
@@ -41,11 +41,11 @@ def run_env():
         action = env.action_space.sample()
         # print(action)
         obs, rew, term, trun, info = env.step(action)
-        env.render()
+        # env.render()
         x += 1
         # if x > 100:
         #     break
-        done = term or trun
+        done = trun
 
         if term:
             print("Goal reached!")
