@@ -35,20 +35,13 @@ class ContinuousMazeEnv(gym.Env):
         self.dense_reward = dense_reward
         self.render_mode = render_mode
 
-        # Create a display for offscreen rendering if needed
-        if render_mode == "rgb_array":
-            display = pyglet.canvas.get_display()
-            screen = display.get_default_screen()
-            config = screen.get_best_config()
-            self._context = config.create_context(None)
-            self._context.set_current()
-
         self.game = ContinuousMazeGame(
             level=self.level,
             random_start=self.random_start,
             max_steps=self.max_steps,
             constant_penalty=self.constant_penalty,
-            headless=(self.render_mode is None),
+            # Headless unless explicitly human (avoids visible windows in rgb_array)
+            headless=(self.render_mode != "human"),
             dense_reward=self.dense_reward,
         )
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
@@ -105,8 +98,9 @@ class ContinuousMazeEnv(gym.Env):
 
     def render(self, mode="human"):
         if self.render_mode == "rgb_array":
-            return self.game.get_window_image()  # Full size for rendering
-        # human mode
+            # Return an RGB array (H, W, 3) uint8 as required by Gymnasium
+            return self.game.get_window_image()
+        # human mode draws to a visible window
         self.game.setup_rendering()
         self.game.window.switch_to()
         self.game.window.dispatch_events()
