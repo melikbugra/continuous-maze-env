@@ -13,7 +13,7 @@ from time import perf_counter
 
 def run_game():
     start_time = perf_counter()
-    game = ContinuousMazeGame(level="level_one", random_start=True)
+    game = ContinuousMazeGame(level="level_six", random_start=False, max_steps=200)
     game.setup_rendering()
 
     game.run()
@@ -28,33 +28,34 @@ def run_env():
 
     env = gym.make(
         "ContinuousMaze-v0",
-        level="level_four",
+        level="level_six",
         max_steps=1000,
-        random_start=False,
+        random_start=True,
         render_mode=None,
     )
 
-    obs, info = env.reset()
-    x = 0
-    done = False
-    while not done:
-        action = env.action_space.sample()
-        # print(action)
-        obs, rew, term, trun, info = env.step(action)
-        env.render()
-        x += 1
-        # if x > 100:
-        #     break
-        done = term or trun
+    for _ in range(10):
+        obs, info = env.reset()
+        x = 0
+        done = False
+        while not done:
+            action = env.action_space.sample()
+            # print(action)
+            obs, rew, term, trun, info = env.step(action)
+            env.render()
+            x += 1
+            # if x > 100:
+            #     break
+            done = term or trun
 
-        if term:
-            print("Goal reached!")
-        if trun:
-            print("Max steps reached!")
+            if term:
+                print("Goal reached!")
+            if trun:
+                print("Max steps reached!")
 
     print(f"Time taken: {perf_counter() - start_time}")
 
 
 if __name__ == "__main__":
-    run_env()
-    # run_game()
+    # run_env()
+    run_game()

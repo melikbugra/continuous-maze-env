@@ -706,34 +706,5 @@ class LevelTwo(BaseLevel):
             self.start_area.y + self.start_area.height / 2 - PLAYER_SIZE / 2,
         )
 
-    def get_random_start_area(self):
-        while True:
-            # Randomly select one of the inner background rectangles
-            random_rectangle = random.choice(self.inner_background)
-
-            # If the random rectangle does not overlap with the finish area,break
-            if not rect_overlap(random_rectangle, self.finish_area):
-                break
-        # Create a start area rectangle that has the same x, y, but height and width of 2
-        start_area = shapes.Rectangle(
-            x=random_rectangle.x + 2,
-            y=random_rectangle.y + 2,
-            width=GRID_SIZE * 2 - 4,
-            height=GRID_SIZE * 2 - 4,
-            color=GREEN,
-            batch=self.batch,
-        )
-
-        return start_area
-
     def update(self):
         pass
-
-
-def rect_overlap(rect1, rect2):
-    return not (
-        rect1.x + rect1.width <= rect2.x
-        or rect2.x + rect2.width <= rect1.x
-        or rect1.y + rect1.height <= rect2.y
-        or rect2.y + rect2.height <= rect1.y
-    )

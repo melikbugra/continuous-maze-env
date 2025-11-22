@@ -5,6 +5,8 @@ from continuous_maze_env.game.levels.level_one import LevelOne
 from continuous_maze_env.game.levels.level_two import LevelTwo
 from continuous_maze_env.game.levels.level_three import LevelThree
 from continuous_maze_env.game.levels.level_four import LevelFour
+from continuous_maze_env.game.levels.level_five import LevelFive
+from continuous_maze_env.game.levels.level_six import LevelSix
 from continuous_maze_env.game.levels.base_level import BaseLevel
 import time
 import numpy as np
@@ -30,6 +32,8 @@ LEVELS = {
     "level_two": LevelTwo,
     "level_three": LevelThree,
     "level_four": LevelFour,
+    "level_five": LevelFive,
+    "level_six": LevelSix,
 }
 
 

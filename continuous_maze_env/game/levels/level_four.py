@@ -406,6 +406,15 @@ class LevelFour(BaseLevel):
             ]
         )
 
+        self.finish_area = shapes.Rectangle(
+            x=GRID_SIZE * 0 + 2,
+            y=GRID_SIZE * 7 + 2,
+            width=GRID_SIZE * 2 - 4,
+            height=GRID_SIZE * 2 - 4,
+            color=END_ZONE,
+            batch=self.batch,
+        )
+
         if random_start:
             self.start_area = self.get_random_start_area()
         else:
@@ -417,60 +426,10 @@ class LevelFour(BaseLevel):
                 color=GREEN,
                 batch=self.batch,
             )
-        self.finish_area = shapes.Rectangle(
-            x=GRID_SIZE * 0 + 2,
-            y=GRID_SIZE * 7 + 2,
-            width=GRID_SIZE * 2 - 4,
-            height=GRID_SIZE * 2 - 4,
-            color=END_ZONE,
-            batch=self.batch,
-        )
 
         self.player_start = (
             self.start_area.x + self.start_area.width / 2 - PLAYER_SIZE / 2,
             self.start_area.y + self.start_area.height / 2 - PLAYER_SIZE / 2,
-        )
-
-    def get_random_start_area(self):
-        while True:
-            x = random.randint(0, 18) * GRID_SIZE
-            y = random.randint(0, 13) * GRID_SIZE
-            start_rect = shapes.Rectangle(
-                x=x + 2,
-                y=y + 2,
-                width=GRID_SIZE * 2 - 4,
-                height=GRID_SIZE * 2 - 4,
-                color=GREEN,
-                batch=self.batch,
-            )
-            if not self.is_overlapping_finish_area(
-                start_rect
-            ) and not self.is_overlapping_walls(start_rect):
-                return start_rect
-
-    def is_overlapping_walls(self, rect: shapes.Rectangle):
-        for line in self.wall_lines:
-            if (
-                rect.x - 4 < max(line.x, line.x2)
-                and rect.x + rect.width + 4 > min(line.x, line.x2)
-                and rect.y + 4 < max(line.y, line.y2)
-                and rect.y + rect.height - 4 > min(line.y, line.y2)
-            ):
-                return True
-        return False
-
-    def is_overlapping_finish_area(self, rect: shapes.Rectangle):
-        finish_x, finish_y, finish_w, finish_h = (
-            GRID_SIZE * 18 + 2,
-            GRID_SIZE * 0 + 2,
-            GRID_SIZE * 2 - 4,
-            GRID_SIZE * 2 - 4,
-        )
-        return not (
-            rect.x + rect.width <= finish_x
-            or rect.x >= finish_x + finish_w
-            or rect.y + rect.height <= finish_y
-            or rect.y >= finish_y + finish_h
         )
 
     def update(self):
