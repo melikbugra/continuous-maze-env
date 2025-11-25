@@ -1,4 +1,12 @@
-from pyglet.window import key
+from typing import Optional, Any
+
+try:
+    from pyglet.window import key
+except Exception as exc:  # pragma: no cover - allow headless import
+    key = None
+    _PLAYER_PYGLET_ERROR = exc
+else:
+    _PLAYER_PYGLET_ERROR = None
 
 from continuous_maze_env.game.utils.constants import (
     PLAYER_SIZE,
@@ -9,7 +17,7 @@ from continuous_maze_env.game.utils.constants import (
 
 class Player:
     def __init__(self, start_x: int, start_y: int, batch, shape_factory):
-        self.key_handler: key.KeyStateHandler = None
+        self.key_handler: Optional[Any] = None
 
         bordered_rect = shape_factory.BorderedRectangle
         self.object = bordered_rect(
@@ -33,7 +41,7 @@ class Player:
             dx += horiztontal_action * PLAYER_SPEED * INTERVAL
             dy += vertical_action * PLAYER_SPEED * INTERVAL
         else:
-            if self.key_handler is not None:
+            if self.key_handler is not None and key is not None:
                 if self.key_handler[key.LEFT]:
                     dx -= PLAYER_SPEED * INTERVAL
                 if self.key_handler[key.RIGHT]:
