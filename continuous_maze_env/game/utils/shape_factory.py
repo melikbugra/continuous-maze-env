@@ -1,4 +1,5 @@
 """Rendering backend abstractions for headless-friendly geometry."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -93,5 +94,3 @@ class ShapeFactory:
     @property
     def is_pyglet(self) -> bool:
         return self._backend == "pyglet"
-
-```
