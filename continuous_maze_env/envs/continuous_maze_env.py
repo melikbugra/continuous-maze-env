@@ -4,7 +4,6 @@
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
-from pyglet.window import key
 import pyglet
 
 from continuous_maze_env.game.game import ContinuousMazeGame
