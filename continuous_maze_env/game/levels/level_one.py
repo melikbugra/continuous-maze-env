@@ -4,7 +4,6 @@ import random
 
 from continuous_maze_env.game.levels.base_level import BaseLevel
 from continuous_maze_env.game.utils.constants import PLAYER_SIZE, GRID_SIZE
-from pyglet import shapes
 from continuous_maze_env.game.utils.colors import (
     BLACK,
     GREEN,
@@ -17,11 +16,11 @@ from continuous_maze_env.game.utils.colors import (
 
 class LevelOne(BaseLevel):
     def setup_level(self, random_start: bool = False):
-        super().__init__()
+        self.begin_setup()
 
         self.inner_background.extend(
             [
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 5,
                     y=GRID_SIZE * 5,
                     width=GRID_SIZE * 2,
@@ -29,7 +28,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 5,
                     y=GRID_SIZE * 7,
                     width=GRID_SIZE * 2,
@@ -37,7 +36,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 5,
                     y=GRID_SIZE * 9,
                     width=GRID_SIZE * 2,
@@ -45,7 +44,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 7,
                     y=GRID_SIZE * 5,
                     width=GRID_SIZE * 2,
@@ -53,7 +52,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 7,
                     y=GRID_SIZE * 7,
                     width=GRID_SIZE * 2,
@@ -61,7 +60,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 7,
                     y=GRID_SIZE * 9,
                     width=GRID_SIZE * 2,
@@ -69,7 +68,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 9,
                     y=GRID_SIZE * 5,
                     width=GRID_SIZE * 2,
@@ -77,7 +76,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 9,
                     y=GRID_SIZE * 7,
                     width=GRID_SIZE * 2,
@@ -85,7 +84,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 9,
                     y=GRID_SIZE * 9,
                     width=GRID_SIZE * 2,
@@ -93,7 +92,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 11,
                     y=GRID_SIZE * 5,
                     width=GRID_SIZE * 2,
@@ -101,7 +100,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 11,
                     y=GRID_SIZE * 7,
                     width=GRID_SIZE * 2,
@@ -109,7 +108,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 11,
                     y=GRID_SIZE * 9,
                     width=GRID_SIZE * 2,
@@ -117,7 +116,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 13,
                     y=GRID_SIZE * 5,
                     width=GRID_SIZE * 2,
@@ -125,7 +124,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 13,
                     y=GRID_SIZE * 7,
                     width=GRID_SIZE * 2,
@@ -133,7 +132,7 @@ class LevelOne(BaseLevel):
                     color=WHITE,
                     batch=self.batch,
                 ),
-                shapes.Rectangle(
+                self.shapes.Rectangle(
                     x=GRID_SIZE * 13,
                     y=GRID_SIZE * 9,
                     width=GRID_SIZE * 2,
@@ -147,7 +146,7 @@ class LevelOne(BaseLevel):
         self.wall_lines.extend(
             [
                 # 0
-                shapes.Line(
+                self.shapes.Line(
                     GRID_SIZE * 5,
                     GRID_SIZE * 5,
                     GRID_SIZE * 5,
@@ -156,7 +155,7 @@ class LevelOne(BaseLevel):
                     color=BLACK,
                     batch=self.batch,
                 ),
-                shapes.Line(
+                self.shapes.Line(
                     GRID_SIZE * 5,
                     GRID_SIZE * 11,
                     GRID_SIZE * 15,
@@ -165,7 +164,7 @@ class LevelOne(BaseLevel):
                     color=BLACK,
                     batch=self.batch,
                 ),
-                shapes.Line(
+                self.shapes.Line(
                     GRID_SIZE * 15,
                     GRID_SIZE * 11,
                     GRID_SIZE * 15,
@@ -174,7 +173,7 @@ class LevelOne(BaseLevel):
                     color=BLACK,
                     batch=self.batch,
                 ),
-                shapes.Line(
+                self.shapes.Line(
                     GRID_SIZE * 15,
                     GRID_SIZE * 5,
                     GRID_SIZE * 5,
@@ -186,7 +185,7 @@ class LevelOne(BaseLevel):
             ]
         )
 
-        self.finish_area = shapes.Rectangle(
+        self.finish_area = self.shapes.Rectangle(
             x=GRID_SIZE * 13 + 2,
             y=GRID_SIZE * 9 + 2,
             width=GRID_SIZE * 2 - 4,
@@ -198,7 +197,7 @@ class LevelOne(BaseLevel):
         if random_start:
             self.start_area = self.get_random_start_area()
         else:
-            self.start_area = shapes.Rectangle(
+            self.start_area = self.shapes.Rectangle(
                 x=GRID_SIZE * 11 + 2,
                 y=GRID_SIZE * 7 + 2,
                 width=GRID_SIZE * 2 - 4,

@@ -1,27 +1,43 @@
 import random
 import time
 
-import pyglet
-from pyglet.shapes import Rectangle, Circle, Line
-
 from continuous_maze_env.game.utils.colors import GREEN
 from continuous_maze_env.game.utils.constants import GRID_SIZE
 
 
 class BaseLevel:
     def __init__(self):
-        self.batch = pyglet.graphics.Batch()
-        self.black_stripes: list[Rectangle] = []
-        self.start_area: Rectangle = None
-        self.finish_area: Rectangle = None
-        self.wall_lines: list[Line] = []
-        self.inner_background: list[Rectangle] = []
-        self.obstacles: list[Circle] = []
-        self.obstacle_inners: list[Circle] = []
-        self.player_start: tuple[int, int] = None
+        self.shape_factory = None
+        self.shapes = None
+        self.batch = None
+        self.black_stripes = []
+        self.start_area = None
+        self.finish_area = None
+        self.wall_lines = []
+        self.inner_background = []
+        self.obstacles = []
+        self.obstacle_inners = []
+        self.player_start = None
 
         self.overlap_time = None
         self.start_time = time.time()
+
+    def attach_factory(self, shape_factory):
+        self.shape_factory = shape_factory
+        self.shapes = shape_factory.shapes
+
+    def begin_setup(self):
+        if self.shape_factory is None:
+            raise RuntimeError("Shape factory must be attached before setup")
+        self.batch = self.shape_factory.create_batch()
+        self.black_stripes = []
+        self.start_area = None
+        self.finish_area = None
+        self.wall_lines = []
+        self.inner_background = []
+        self.obstacles = []
+        self.obstacle_inners = []
+        self.player_start = None
 
     def setup_level(self, random_start: bool = False):
         """
@@ -44,7 +60,7 @@ class BaseLevel:
             if not self.rect_overlap(random_rectangle, self.finish_area):
                 break
         # Create a start area rectangle that has the same x, y, but height and width of 2
-        start_area = Rectangle(
+        start_area = self.shapes.Rectangle(
             x=random_rectangle.x + 2,
             y=random_rectangle.y + 2,
             width=GRID_SIZE * 2 - 4,
@@ -55,7 +71,7 @@ class BaseLevel:
 
         return start_area
 
-    def rect_overlap(self, rect1: Rectangle, rect2: Rectangle):
+    def rect_overlap(self, rect1, rect2):
         return not (
             rect1.x + rect1.width <= rect2.x
             or rect2.x + rect2.width <= rect1.x

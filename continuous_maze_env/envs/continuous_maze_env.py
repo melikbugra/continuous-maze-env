@@ -4,8 +4,6 @@
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
-import pyglet
-
 from continuous_maze_env.game.game import ContinuousMazeGame
 
 # Use constants to avoid needing a visible window in headless mode
@@ -33,14 +31,14 @@ class ContinuousMazeEnv(gym.Env):
         self.constant_penalty = constant_penalty
         self.dense_reward = dense_reward
         self.render_mode = render_mode
+        headless = self.render_mode is None
 
         self.game = ContinuousMazeGame(
             level=self.level,
             random_start=self.random_start,
             max_steps=self.max_steps,
             constant_penalty=self.constant_penalty,
-            # Headless unless explicitly human (avoids visible windows in rgb_array)
-            headless=(self.render_mode != "human"),
+            headless=headless,
             dense_reward=self.dense_reward,
         )
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
@@ -57,12 +55,13 @@ class ContinuousMazeEnv(gym.Env):
         super().reset(seed=seed, options=options)
         # If env was closed earlier, re-create the game on reset
         if self.game is None:
+            headless = self.render_mode is None
             self.game = ContinuousMazeGame(
                 level=self.level,
                 random_start=self.random_start,
                 max_steps=self.max_steps,
                 constant_penalty=self.constant_penalty,
-                headless=(self.render_mode is None),
+                headless=headless,
                 dense_reward=self.dense_reward,
             )
         else:
@@ -96,10 +95,12 @@ class ContinuousMazeEnv(gym.Env):
         return observation, reward, terminated, truncated, info
 
     def render(self, mode="human"):
+        if self.render_mode is None:
+            raise RuntimeError(
+                "Render was requested but no render_mode was set during initialization."
+            )
         if self.render_mode == "rgb_array":
-            # Return an RGB array (H, W, 3) uint8 as required by Gymnasium
             return self.game.get_window_image()
-        # human mode draws to a visible window
         self.game.setup_rendering()
         self.game.window.switch_to()
         self.game.window.dispatch_events()

@@ -1,22 +1,7 @@
 import os
 
 import pyglet
-import pyglet.canvas
 
-# Enable pyglet headless mode automatically when no display is available or
-# when the user explicitly requests it via PYGLET_HEADLESS.
-_env_headless = os.environ.get("PYGLET_HEADLESS")
-_force_headless = False
-if _env_headless is not None:
-    _force_headless = _env_headless.lower() in {"1", "true", "yes", "on"}
-else:
-    _force_headless = not os.environ.get("DISPLAY")
-
-if _force_headless:
-    pyglet.options["headless"] = True
-    pyglet.options["shadow_window"] = False
-
-from pyglet import shapes
 from pyglet.window import key, Window
 from continuous_maze_env.game.levels.level_one import LevelOne
 from continuous_maze_env.game.levels.level_two import LevelTwo
@@ -43,6 +28,7 @@ from continuous_maze_env.game.utils.constants import (
     RENDER_SCALE,
 )
 from continuous_maze_env.game.objects.player import Player
+from continuous_maze_env.game.utils.shape_factory import ShapeFactory
 
 LEVELS = {
     "level_one": LevelOne,
@@ -74,10 +60,13 @@ class ContinuousMazeGame:
         self.dense_reward = dense_reward
         self.headless = headless
         self.window = None
-        self._headless_context = None
-        self._headless_helper_window = None
-        if self.headless:
-            self._ensure_headless_gl_context()
+        try:
+            self.shape_factory = ShapeFactory(use_pyglet=not self.headless)
+        except RuntimeError as exc:
+            raise RuntimeError(
+                "Pyglet rendering backend is unavailable. Run with headless=True "
+                "or install the necessary OpenGL/EGL dependencies."
+            ) from exc
         if not self.headless:
             self.window = Window(
                 width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False, vsync=False
@@ -89,6 +78,7 @@ class ContinuousMazeGame:
             except Exception:
                 pass
         self.level: BaseLevel = LEVELS[level]()
+        self.level.attach_factory(self.shape_factory)
         self.random_start = random_start
         self.eliminated = False
         self.max_steps = max_steps
@@ -100,62 +90,9 @@ class ContinuousMazeGame:
         self._max_diag = float((WINDOW_WIDTH**2 + WINDOW_HEIGHT**2) ** 0.5)
         self.setup_level_and_player(random_start=self.random_start)
 
-    def _ensure_headless_gl_context(self):
-        """Create a minimal GL context for headless mode so pyglet shapes work."""
-        # If a context already exists reuse it, otherwise try to bootstrap one.
-        try:
-            if pyglet.gl.current_context:
-                return
-        except Exception:
-            # Some pyglet versions raise AttributeError before a context exists.
-            pass
-
-        if self._headless_context is not None:
-            try:
-                self._headless_context.set_current()
-                return
-            except Exception:
-                # Context became invalid, fall through and recreate it.
-                self._headless_context = None
-
-        errors: list[Exception] = []
-        template = gl.Config(double_buffer=False)
-
-        # First try pyglet's dedicated headless canvas backend if available.
-        if pyglet.options.get("headless"):
-            try:
-                from pyglet.canvas import headless as headless_canvas
-
-                display = headless_canvas.Display()
-                screen = display.get_default_screen()
-                config = screen.get_best_config(template)
-                context = config.create_context(None)
-                context.set_current()
-                self._headless_context = context
-                return
-            except NotImplementedError as exc:  # pragma: no cover - backend detail
-                errors.append(exc)
-            except Exception as exc:  # pragma: no cover - backend detail
-                errors.append(exc)
-
-        # Fallback: spin up a tiny invisible window purely to host the GL context.
-        try:
-            helper = Window(width=1, height=1, visible=False, vsync=False)
-            try:
-                helper.set_vsync(False)
-            except Exception:
-                pass
-            helper.switch_to()
-            self._headless_helper_window = helper
-            self._headless_context = helper.context
-            return
-        except Exception as exc:
-            errors.append(exc)
-
-        last_exc = errors[-1] if errors else None
-        raise RuntimeError("Failed to initialize headless GL context") from last_exc
-
     def setup_rendering(self):
+        if self.headless:
+            raise RuntimeError("Rendering is disabled while headless=True.")
         # Re-create the window if it doesn't exist
         if self.window is None:
             self.window = Window(
@@ -269,7 +206,10 @@ class ContinuousMazeGame:
     def setup_level_and_player(self, random_start: bool = False):
         self.level.setup_level(random_start=random_start)
         self.player = Player(
-            self.level.player_start[0], self.level.player_start[1], self.level.batch
+            self.level.player_start[0],
+            self.level.player_start[1],
+            self.level.batch,
+            self.shape_factory,
         )
         if self.window:
             self.setup_key_handler()
@@ -375,6 +315,11 @@ class ContinuousMazeGame:
         return float(dist / self._max_diag) if self._max_diag > 0 else 0.0
 
     def get_window_image(self, resize_shape=None) -> np.ndarray:
+        if self.headless:
+            raise RuntimeError(
+                "RGB capture is not available in headless mode. Instantiate the "
+                "environment with headless=False or render_mode='human'."
+            )
         try:
             # Make sure we're using the correct context
             if not hasattr(self, "_gl_context"):

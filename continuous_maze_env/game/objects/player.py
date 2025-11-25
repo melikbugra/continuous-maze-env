@@ -1,5 +1,3 @@
-from pyglet.shapes import BorderedRectangle
-from pyglet.graphics import Batch
 from pyglet.window import key
 
 from continuous_maze_env.game.utils.constants import (
@@ -10,10 +8,11 @@ from continuous_maze_env.game.utils.constants import (
 
 
 class Player:
-    def __init__(self, start_x: int, start_y: int, batch: Batch):
+    def __init__(self, start_x: int, start_y: int, batch, shape_factory):
         self.key_handler: key.KeyStateHandler = None
 
-        self.object = BorderedRectangle(
+        bordered_rect = shape_factory.BorderedRectangle
+        self.object = bordered_rect(
             x=start_x,
             y=start_y,
             width=PLAYER_SIZE,
