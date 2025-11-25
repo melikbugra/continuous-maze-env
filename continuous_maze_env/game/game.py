@@ -75,6 +75,7 @@ class ContinuousMazeGame:
         self.headless = headless
         self.window = None
         self._headless_context = None
+        self._headless_helper_window = None
         if self.headless:
             self._ensure_headless_gl_context()
         if not self.headless:
@@ -101,24 +102,58 @@ class ContinuousMazeGame:
 
     def _ensure_headless_gl_context(self):
         """Create a minimal GL context for headless mode so pyglet shapes work."""
+        # If a context already exists reuse it, otherwise try to bootstrap one.
         try:
             if pyglet.gl.current_context:
                 return
-            if pyglet.options.get("headless"):
+        except Exception:
+            # Some pyglet versions raise AttributeError before a context exists.
+            pass
+
+        if self._headless_context is not None:
+            try:
+                self._headless_context.set_current()
+                return
+            except Exception:
+                # Context became invalid, fall through and recreate it.
+                self._headless_context = None
+
+        errors: list[Exception] = []
+        template = gl.Config(double_buffer=False)
+
+        # First try pyglet's dedicated headless canvas backend if available.
+        if pyglet.options.get("headless"):
+            try:
                 from pyglet.canvas import headless as headless_canvas
 
                 display = headless_canvas.Display()
                 screen = display.get_default_screen()
-            else:
-                display = pyglet.canvas.get_display()
-                screens = display.get_screens()
-                screen = screens[0] if screens else display.get_default_screen()
-            config = screen.get_best_config(gl.Config(double_buffer=False))
-            context = config.create_context(None)
-            context.set_current()
-            self._headless_context = context
+                config = screen.get_best_config(template)
+                context = config.create_context(None)
+                context.set_current()
+                self._headless_context = context
+                return
+            except NotImplementedError as exc:  # pragma: no cover - backend detail
+                errors.append(exc)
+            except Exception as exc:  # pragma: no cover - backend detail
+                errors.append(exc)
+
+        # Fallback: spin up a tiny invisible window purely to host the GL context.
+        try:
+            helper = Window(width=1, height=1, visible=False, vsync=False)
+            try:
+                helper.set_vsync(False)
+            except Exception:
+                pass
+            helper.switch_to()
+            self._headless_helper_window = helper
+            self._headless_context = helper.context
+            return
         except Exception as exc:
-            raise RuntimeError("Failed to initialize headless GL context") from exc
+            errors.append(exc)
+
+        last_exc = errors[-1] if errors else None
+        raise RuntimeError("Failed to initialize headless GL context") from last_exc
 
     def setup_rendering(self):
         # Re-create the window if it doesn't exist
