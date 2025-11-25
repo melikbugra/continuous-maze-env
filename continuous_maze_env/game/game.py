@@ -1,6 +1,5 @@
 import pyglet
 from pyglet import shapes
-from pyglet.window import key, Window
 from continuous_maze_env.game.levels.level_one import LevelOne
 from continuous_maze_env.game.levels.level_two import LevelTwo
 from continuous_maze_env.game.levels.level_three import LevelThree
@@ -58,6 +57,8 @@ class ContinuousMazeGame:
         self.headless = headless
         self.window = None
         if not self.headless:
+            from pyglet.window import key, Window
+
             self.window = Window(
                 width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False, vsync=False
             )
