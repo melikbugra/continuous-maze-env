@@ -1,5 +1,22 @@
+import os
+
 import pyglet
+
+# Enable pyglet headless mode automatically when no display is available or
+# when the user explicitly requests it via PYGLET_HEADLESS.
+_env_headless = os.environ.get("PYGLET_HEADLESS")
+_force_headless = False
+if _env_headless is not None:
+    _force_headless = _env_headless.lower() in {"1", "true", "yes", "on"}
+else:
+    _force_headless = not os.environ.get("DISPLAY")
+
+if _force_headless:
+    pyglet.options["headless"] = True
+    pyglet.options["shadow_window"] = False
+
 from pyglet import shapes
+from pyglet.window import key, Window
 from continuous_maze_env.game.levels.level_one import LevelOne
 from continuous_maze_env.game.levels.level_two import LevelTwo
 from continuous_maze_env.game.levels.level_three import LevelThree
@@ -57,8 +74,6 @@ class ContinuousMazeGame:
         self.headless = headless
         self.window = None
         if not self.headless:
-            from pyglet.window import key, Window
-
             self.window = Window(
                 width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False, vsync=False
             )
