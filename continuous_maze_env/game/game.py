@@ -2,7 +2,18 @@ import os
 
 import pyglet
 
-from pyglet.window import key, Window
+_PYGLET_ERROR: Exception | None = None
+try:
+    from pyglet.window import key, Window
+    from pyglet.gl import glClearColor
+    from pyglet import gl
+except Exception as exc:  # pragma: no cover - import guard triggers headless
+    key = None
+    Window = None
+    glClearColor = None
+    gl = None
+    _PYGLET_ERROR = exc
+
 from continuous_maze_env.game.levels.level_one import LevelOne
 from continuous_maze_env.game.levels.level_two import LevelTwo
 from continuous_maze_env.game.levels.level_three import LevelThree
@@ -12,8 +23,6 @@ from continuous_maze_env.game.levels.level_six import LevelSix
 from continuous_maze_env.game.levels.base_level import BaseLevel
 import time
 import numpy as np
-from pyglet.gl import glClearColor
-from pyglet import gl
 
 from continuous_maze_env.game.utils.functions import (
     line_segments_intersect,
@@ -40,6 +49,15 @@ LEVELS = {
 }
 
 
+def _require_pyglet(feature: str = "Rendering") -> None:
+    if _PYGLET_ERROR is None:
+        return
+    raise RuntimeError(
+        f"{feature} requires pyglet with a working display. Set render_mode=None for"
+        " headless training or install a virtual display (e.g. Xvfb)."
+    ) from _PYGLET_ERROR
+
+
 class ContinuousMazeGame:
     def __init__(
         self,
@@ -60,13 +78,9 @@ class ContinuousMazeGame:
         self.dense_reward = dense_reward
         self.headless = headless
         self.window = None
-        try:
-            self.shape_factory = ShapeFactory(use_pyglet=not self.headless)
-        except RuntimeError as exc:
-            raise RuntimeError(
-                "Pyglet rendering backend is unavailable. Run with headless=True "
-                "or install the necessary OpenGL/EGL dependencies."
-            ) from exc
+        if not self.headless:
+            _require_pyglet("Interactive rendering")
+        self.shape_factory = ShapeFactory(use_pyglet=not self.headless)
         if not self.headless:
             self.window = Window(
                 width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False, vsync=False
@@ -93,6 +107,7 @@ class ContinuousMazeGame:
     def setup_rendering(self):
         if self.headless:
             raise RuntimeError("Rendering is disabled while headless=True.")
+        _require_pyglet("Window rendering")
         # Re-create the window if it doesn't exist
         if self.window is None:
             self.window = Window(
@@ -119,6 +134,7 @@ class ContinuousMazeGame:
                 pass
 
     def setup_key_handler(self):
+        _require_pyglet("Keyboard input handling")
         self.player.key_handler = key.KeyStateHandler()
         self.window.push_handlers(self.player.key_handler)
 
@@ -320,6 +336,7 @@ class ContinuousMazeGame:
                 "RGB capture is not available in headless mode. Instantiate the "
                 "environment with headless=False or render_mode='human'."
             )
+        _require_pyglet("rgb_array capture")
         try:
             # Make sure we're using the correct context
             if not hasattr(self, "_gl_context"):
