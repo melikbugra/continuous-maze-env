@@ -1,6 +1,7 @@
 import os
 
 import pyglet
+import pyglet.canvas
 
 # Enable pyglet headless mode automatically when no display is available or
 # when the user explicitly requests it via PYGLET_HEADLESS.
@@ -73,6 +74,9 @@ class ContinuousMazeGame:
         self.dense_reward = dense_reward
         self.headless = headless
         self.window = None
+        self._headless_context = None
+        if self.headless:
+            self._ensure_headless_gl_context()
         if not self.headless:
             self.window = Window(
                 width=WINDOW_WIDTH, height=WINDOW_HEIGHT, visible=False, vsync=False
@@ -94,6 +98,22 @@ class ContinuousMazeGame:
         # Distance tracking for dense rewards
         self._max_diag = float((WINDOW_WIDTH**2 + WINDOW_HEIGHT**2) ** 0.5)
         self.setup_level_and_player(random_start=self.random_start)
+
+    def _ensure_headless_gl_context(self):
+        """Create a minimal GL context for headless mode so pyglet shapes work."""
+        try:
+            if pyglet.gl.current_context:
+                return
+            display = pyglet.canvas.get_display()
+            screens = display.get_screens()
+            if not screens:
+                raise RuntimeError("No screens available for headless display")
+            config = screens[0].get_best_config(gl.Config(double_buffer=False))
+            context = config.create_context(None)
+            context.set_current()
+            self._headless_context = context
+        except Exception as exc:
+            raise RuntimeError("Failed to initialize headless GL context") from exc
 
     def setup_rendering(self):
         # Re-create the window if it doesn't exist
