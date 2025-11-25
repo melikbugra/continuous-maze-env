@@ -104,11 +104,16 @@ class ContinuousMazeGame:
         try:
             if pyglet.gl.current_context:
                 return
-            display = pyglet.canvas.get_display()
-            screens = display.get_screens()
-            if not screens:
-                raise RuntimeError("No screens available for headless display")
-            config = screens[0].get_best_config(gl.Config(double_buffer=False))
+            if pyglet.options.get("headless"):
+                from pyglet.canvas import headless as headless_canvas
+
+                display = headless_canvas.Display()
+                screen = display.get_default_screen()
+            else:
+                display = pyglet.canvas.get_display()
+                screens = display.get_screens()
+                screen = screens[0] if screens else display.get_default_screen()
+            config = screen.get_best_config(gl.Config(double_buffer=False))
             context = config.create_context(None)
             context.set_current()
             self._headless_context = context
