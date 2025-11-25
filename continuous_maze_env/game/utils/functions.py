@@ -1,4 +1,6 @@
-from pyglet.shapes import Rectangle, Circle
+from __future__ import annotations
+
+from typing import Any, Mapping
 
 
 def line_segments_intersect(p1, p2, q1, q2):
@@ -12,7 +14,7 @@ def line_segments_intersect(p1, p2, q1, q2):
     return (ccw(p1, q1, q2) != ccw(p2, q1, q2)) and (ccw(p1, p2, q1) != ccw(p1, p2, q2))
 
 
-def rectangle_circle_overlap(rect: Rectangle, circle: Circle) -> bool:
+def rectangle_circle_overlap(rect: Mapping[str, float], circle: Any) -> bool:
     """
     Check if a rectangle and a circle overlap.
     rect: dict with 'left', 'right', 'top', 'bottom'
@@ -31,7 +33,7 @@ def rectangle_circle_overlap(rect: Rectangle, circle: Circle) -> bool:
     return distance_squared < circle.radius**2
 
 
-def rectangle_inside(rect1, rect2):
+def rectangle_inside(rect1: Any, rect2: Any):
     """
     Check if rect1 is completely inside rect2.
     """
